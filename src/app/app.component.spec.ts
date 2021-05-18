@@ -1,35 +1,40 @@
-import { TestBed } from '@angular/core/testing';
+import { AppService } from './app.service';
+import { fakeAsync, TestBed, async, tick } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientTestingModule } from "@angular/common/http/testing";
 import { AppComponent } from './app.component';
+import { of } from 'rxjs';
+import {delay} from 'rxjs/operators'; 
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
-        RouterTestingModule
+        RouterTestingModule,
+        HttpClientTestingModule
       ],
       declarations: [
         AppComponent
       ],
+      providers:[
+        AppService
+      ]
     }).compileComponents();
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
+ 
 
-  it(`should have as title 'unit1'`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('unit1');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement;
-    expect(compiled.querySelector('.content span').textContent).toContain('unit1 app is running!');
-  });
+  it('should call getPostDetails and return empty', fakeAsync(()=>{
+    let fixture = TestBed.createComponent(AppComponent);
+    let component = fixture.debugElement.componentInstance;
+    let appService = fixture.debugElement.injector.get(AppService);
+    let stub = spyOn(appService, "getPosts").and.callFake(()=>{
+      return of([]).pipe(delay(300));
+    })
+    component.getPostDetails();
+    expect(component.showLoadingIndicator).toEqual(true);
+    tick(300);
+    expect(component.showLoadingIndicator).toEqual(false);
+    expect(component.postDetails).toEqual([]);
+  }))
 });
